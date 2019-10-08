@@ -12,6 +12,8 @@ import robocode.*;
  * @author pere
  */
 public class DummyRobot extends Robot {
+    
+    @Override
     public void run () {
         turnLeft (getHeading());
         while (true)  {
@@ -20,10 +22,12 @@ public class DummyRobot extends Robot {
         }
     }
     
+    @Override
     public void onScannedRobot(ScannedRobotEvent e) {
         fire(1);
     }
     
+    @Override
     public void onHitByBullet(HitByBulletEvent e) {
         // turnLeft(180);
     }

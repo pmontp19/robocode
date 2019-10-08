@@ -15,6 +15,7 @@ public class TorreRobot extends Robot {
     
     private static double bearingThreshold = 5;
     
+    @Override
     public void run () {
         turnLeft (getHeading());
         while (true)  {
@@ -29,6 +30,7 @@ public class TorreRobot extends Robot {
         return bearing;
     }
     
+    @Override
     public void onScannedRobot(ScannedRobotEvent e) {
         if (normalizeBearing(e.getBearing()) < bearingThreshold) {
             fire(1);
