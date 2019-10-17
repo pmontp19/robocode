@@ -12,7 +12,7 @@ import robocode.*;
  */
 public class Basic_per_Quadrants extends Robot {
     
-    /* -PER CERT, donam un num de telefeon/correu (o envia un Whats a 608 96 13 96) per mantenir contacte
+    /* 
         - El robot divideix l escenari en 4 quadrants i juga al voltant de 2. Quan rep una bala canvia de quadrant (si jugava amb el q1 i q2, ara ho fa amb q2 i q3) rapidament
         - Si xoca amb un item tomba el cano fins trobar un tanc i dispara.
         - En el terreny de desplaçament del tanc, el cano i el radar es van desplaçant entre l'angle 45º i 135º (fent 90º)
@@ -144,68 +144,143 @@ public class Basic_per_Quadrants extends Robot {
         //}   
                 
     }
+    public void coorre(double x, double y, int q_act){
+        
+        if(q_act==0){
+            turnLeft(getHeading()+90);
+  
+            while (getX()>x/5){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(getHeading()+180);
+            while ( getY() >y/5){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while (getX()<4*x/5){
+                ahead(168);
+                turnGunLeft(15);
+            }
+            turnLeft(90);
+            while ( getY() >4*  y/5){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+        }
+        else if(q_act==1){
+            turnLeft(getHeading());
+  
+            while (getY()>y/8){
+                back(168);
+                turnGunRight(15);
+            }
+            turnRight(90);
+            while ( getX() <7*x/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while (getY()<7*y/8){
+                ahead(168);
+                turnGunLeft(15);
+            }
+            turnLeft(90);
+            while ( getX() >1*x/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnRight(90);
+            
+        }
+        else if(q_act==2){
+            turnLeft(getHeading()+90);
+  
+            while (getX()>x/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while ( getY() <7*y/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while (getX()>x/8){
+                ahead(168);
+                turnGunLeft(15);
+            }
+            turnLeft(90);
+            while ( getY() >y/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+//            turnRight(90);        
+        }
+        else {
+            turnLeft(getHeading());
+  
+            while (getY()<7*y/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while (getX() > x/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+            turnLeft(90);
+            while (getY()>y/8){
+                ahead(168);
+                turnGunLeft(15);
+            }
+            turnLeft(90);
+            while ( getX() < 3*x/8){
+                ahead(168);
+                turnGunRight(15);
+            }
+        }
+ 
+    }
     public void run () {
         
         double y = getBattleFieldHeight();
         double x =getBattleFieldWidth();
-        Q_de_joc =0; 
-        while(true){
-            if (Q_de_joc==0){
-                goCorner12(x,y);}
-            else if (Q_de_joc==1){
-                
-                goCorner23(x,y);}
-            else if (Q_de_joc==2){
-                goCorner23(x,y);}
-            else {
-
-                goCorner14(x,y);}
-        }
+        Q_de_joc =0;
+        double vida;
+        goCorner12(x,y);
+        /*while(true){
         
-       //goCorner12(x,y);  
-        
-               /* turnLeft(0+getHeading());
-                //double y =getBattleFieldHeight();
-                Boolean trobat = true;
-                while(true){
+        coorre(x, y, Q_de_joc);
+        }/else {*/
+            while(true ){
+                vida= getEnergy();
+                if (vida<40.0){
+                    goCorner12(x,y);
+                    coorre(x, y, 0);
+                    //coorre(x, y, Q_de_joc);
+                }
+                else if (Q_de_joc==0){
+                    goCorner12(x,y);}
+                else if (Q_de_joc==1){
 
-                    if (y/4>getY()){
-                        trobat =true;
-                    }
-                    if(3*y/4 <getY()) trobat = false;
+                    goCorner23(x,y);}
+                else if (Q_de_joc==2){
+                    goCorner23(x,y);}
+                else {
 
-                    if (trobat){
-                        ahead(75);
-                    }
-                    else {
-                        back(75);
-                    }
-                    turnGunLeft(10);
-                }*/
-     
+                    goCorner14(x,y);}
+            }
+        //}
     }
     public void onHitWall(HitWallEvent e){
-        //turnRight(getHeading());
-        //back(350);
-        //turnRight(90);
-            
-            /*if (getX()<getBattleFieldWidth()/2){
-               if (getY()<getBattleFieldHeight()/2 ){
-                   turnRight(getHeading());
-                   ahead(50);
-                }
-            }*/
+        turnLeft(90);
     }
     @Override
     public void onScannedRobot(ScannedRobotEvent e) {
-        
-        /*  if (getX()< getBattleFieldWidth()*3/4 ){
-            turnGunLeft(12);
-        }
-        else if (getX()> getBattleFieldWidth()*3/4 ){
-            turnGunRight(12);
-        }
-        */
+
         turnGunRight(15);
         if (e.getDistance()<5){
            // turnGunLeft (getHeading());
