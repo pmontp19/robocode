@@ -49,8 +49,8 @@ public class PropiAvancat extends AdvancedRobot {
     }
 
     public void anarCentre() {
-        turnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
-        ahead(Math.abs(getDistancia(getX(), getY(), getBattleFieldWidth() / 2, getBattleFieldHeight() / 2)));
+        setTurnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
+        setAhead(Math.abs(getDistancia(getX(), getY(), getBattleFieldWidth() / 2, getBattleFieldHeight() / 2)));
     }
 
     public boolean wallsAprop() {
@@ -81,16 +81,22 @@ public class PropiAvancat extends AdvancedRobot {
         setAhead(direccio * 100);
 
         // canviem la velocitat aleatoriament 
-        if (Math.random() > .95) {
+        /*if (Math.random() > .95) {
             setMaxVelocity((2 * Math.random()) + 10);
-        }
+        }*/
         setTurnRadarRight(Double.POSITIVE_INFINITY * direccioRadar);
         double angleAbsolut = getHeading() + e.getBearing();
         double angleCano = Utils.normalRelativeAngleDegrees(angleAbsolut - getGunHeading());
 
         // limit cano https://robocode.sourceforge.io/docs/robocode/robocode/Rules.html#GUN_TURN_RATE
+        // estalviem energia si >25
         if (Math.abs(angleCano) <= 4 && getEnergy() > 25) {
-            setTurnGunRight(angleCano);
+            if (e.getBearing() > 0) {
+                setTurnGunRight(angleCano+0.5);
+            } else {
+                setTurnGunRight(angleCano-0.5);
+
+            }
             dispara(e);
         } else {
             setTurnGunRight(angleCano);
@@ -99,17 +105,19 @@ public class PropiAvancat extends AdvancedRobot {
     }
 
     public void dispara(ScannedRobotEvent e) {
-        if (rateEncerts > .5) {
+        // si estem fallant molt disparem només aprop
+        if (rateEncerts > .1) {
             if (e.getVelocity() == 0) {
                 setFire(3);
             } else {
                 setFire(300 / e.getDistance());
             }
         } else {
-            if (e.getDistance() > 200) {
-                setFire(1);
+            if (e.getDistance() < 250) {
+                setFire(2);
             }
         }
+        out.println(rateEncerts);
     }
 
     public void aproparse(ScannedRobotEvent e) {
@@ -120,6 +128,7 @@ public class PropiAvancat extends AdvancedRobot {
 
     public void onHitWall(HitWallEvent e) {
         direccio = -direccio;
+        setTurnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
         setBack(150 * direccio);
     }
 
@@ -129,8 +138,7 @@ public class PropiAvancat extends AdvancedRobot {
     }
 
     public void onHitBullet(HitByBulletEvent e) {
-        direccio = -direccio;
-        setAhead(100 * direccio);
+        setAhead(100 * -direccio);
     }
 
     public void onBulletMissed(BulletMissedEvent event) {
@@ -142,4 +150,7 @@ public class PropiAvancat extends AdvancedRobot {
         bulletsHit++;
         rateEncerts = bulletsHit / (bulletsMissed + bulletsHit);
     }
+    
+    
 }
+
