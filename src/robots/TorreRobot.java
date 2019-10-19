@@ -37,7 +37,7 @@ public class TorreRobot extends Robot {
         }
     }
     
-    public void onHiyByBullet(HitByBulletEvent e) {
-        // turnLeft(180);
+    public void onHitByBullet(HitByBulletEvent e) {
+        turnLeft(180);
     }
 }
