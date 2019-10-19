@@ -5,6 +5,8 @@
  */
 package robots;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import robocode.*;
 import robocode.util.Utils;
 
@@ -20,10 +22,40 @@ public class PropiAvancat extends AdvancedRobot {
     private int bulletsHit = 0;
     private double rateEncerts = 1;
     private final double marges = 20;
+    private Queue<Integer> trajectoria;
+
+    private void afegirTrajectoria(int bearing) {
+        if (trajectoria.size() == 10) {
+            trajectoria.remove();
+        }
+        trajectoria.add(bearing);
+        out.println(bearing);
+    }
+
+    private boolean mateixaTrajectoria(ScannedRobotEvent e) {
+        boolean bearing = true;
+        double anterior = e.getBearing();
+        if (trajectoria.size() == 10) {
+            for (int i = 0; i < trajectoria.size() && bearing; i++) {
+                if (anterior == trajectoria.element()) {
+                    bearing = true;
+                } else {
+                    bearing = false;
+                }
+
+                anterior = trajectoria.element();
+
+            }
+            return bearing;
+
+        }
+        return false;
+    }
 
     public void run() {
         if (getRoundNum() == 0) {
             setAdjustRadarForRobotTurn(true);
+            trajectoria = new LinkedList<>();
         }
         //turnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
         //ahead(Math.abs(getDistancia(getX(), getY(), getBattleFieldWidth() / 2, getBattleFieldHeight() / 2)));
@@ -54,12 +86,10 @@ public class PropiAvancat extends AdvancedRobot {
     }
 
     public boolean wallsAprop() {
-        if (
-                getX() <= marges
+        if (getX() <= marges
                 || getY() <= marges
                 || getX() >= getBattleFieldWidth() - marges
-                || getY() >= getBattleFieldHeight() - marges
-                ) {
+                || getY() >= getBattleFieldHeight() - marges) {
             return true;
         } else {
             return false;
@@ -68,11 +98,14 @@ public class PropiAvancat extends AdvancedRobot {
 
     public void onScannedRobot(ScannedRobotEvent e) {
         direccioRadar = -direccioRadar;
+        double angleAbsolut = getHeading() + e.getBearing();
+        //afegirTrajectoria((int) e.getHeading());
         // canviem la direccio per aproparnos i allunyar-nos
         /*if (wallsAprop()) {
-            anarCentre();
-            direccio = -direccio;
-        }*/
+         anarCentre();
+         direccio = -direccio;
+         }*/
+        //out.println(mateixaTrajectoria(e));
         if (direccio == 1) {
             setTurnRight(e.getBearing() + 85);
         } else if (direccio == -1) {
@@ -82,19 +115,18 @@ public class PropiAvancat extends AdvancedRobot {
 
         // canviem la velocitat aleatoriament 
         /*if (Math.random() > .95) {
-            setMaxVelocity((2 * Math.random()) + 10);
-        }*/
+         setMaxVelocity((2 * Math.random()) + 10);
+         }*/
         setTurnRadarRight(Double.POSITIVE_INFINITY * direccioRadar);
-        double angleAbsolut = getHeading() + e.getBearing();
         double angleCano = Utils.normalRelativeAngleDegrees(angleAbsolut - getGunHeading());
 
         // limit cano https://robocode.sourceforge.io/docs/robocode/robocode/Rules.html#GUN_TURN_RATE
         // estalviem energia si >25
         if (Math.abs(angleCano) <= 4 && getEnergy() > 25) {
             if (e.getBearing() > 0) {
-                setTurnGunRight(angleCano+0.5);
+                setTurnGunRight(angleCano + 0.5);
             } else {
-                setTurnGunRight(angleCano-0.5);
+                setTurnGunRight(angleCano - 0.5);
 
             }
             dispara(e);
@@ -117,7 +149,7 @@ public class PropiAvancat extends AdvancedRobot {
                 setFire(2);
             }
         }
-        out.println(rateEncerts);
+        //out.println(rateEncerts);
     }
 
     public void aproparse(ScannedRobotEvent e) {
@@ -150,7 +182,5 @@ public class PropiAvancat extends AdvancedRobot {
         bulletsHit++;
         rateEncerts = bulletsHit / (bulletsMissed + bulletsHit);
     }
-    
-    
-}
 
+}
