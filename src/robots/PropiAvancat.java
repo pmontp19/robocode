@@ -6,6 +6,7 @@
 package robots;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import robocode.*;
 import robocode.util.Utils;
@@ -22,41 +23,31 @@ public class PropiAvancat extends AdvancedRobot {
     private int bulletsHit = 0;
     private double rateEncerts = 1;
     private final double marges = 20;
-    private Queue<Integer> trajectoria;
+    private final int TrajectoriaMAXSIZE = 300;
+    private List<Integer> trajectoria = new LinkedList<>();
+    private boolean dummyMode = false;
 
     private void afegirTrajectoria(int bearing) {
-        if (trajectoria.size() == 10) {
-            trajectoria.remove();
+        if (trajectoria.size() > TrajectoriaMAXSIZE) {
+            trajectoria.remove(0);
         }
         trajectoria.add(bearing);
-        out.println(bearing);
     }
 
-    private boolean mateixaTrajectoria(ScannedRobotEvent e) {
-        boolean bearing = true;
-        double anterior = e.getBearing();
-        if (trajectoria.size() == 10) {
-            for (int i = 0; i < trajectoria.size() && bearing; i++) {
-                if (anterior == trajectoria.element()) {
-                    bearing = true;
-                } else {
-                    bearing = false;
+    private boolean mateixaTrajectoria() {
+        boolean heading = false;
+        for (int i = 0; i < trajectoria.size() - 1; i++) {
+            for (int k = i + 1; k < trajectoria.size(); k++) {
+                if (trajectoria.get(i) == trajectoria.get(k)) {
+                    heading = true;
                 }
-
-                anterior = trajectoria.element();
-
             }
-            return bearing;
-
         }
-        return false;
+        return heading;
     }
 
     public void run() {
-        if (getRoundNum() == 0) {
-            setAdjustRadarForRobotTurn(true);
-            trajectoria = new LinkedList<>();
-        }
+        setAdjustRadarForRobotTurn(true);
         //turnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
         //ahead(Math.abs(getDistancia(getX(), getY(), getBattleFieldWidth() / 2, getBattleFieldHeight() / 2)));
         setTurnRadarRight(Double.POSITIVE_INFINITY);
@@ -64,28 +55,28 @@ public class PropiAvancat extends AdvancedRobot {
     }
 
     // helper dona la direccio a anar donat un punt
-    public double getDireccio(double x, double y) {
+    private double getDireccio(double x, double y) {
         // arctangent https://es.wikipedia.org/wiki/Arcotangente_de_dos_par%C3%A1metros
         double angle = Math.atan2(x - getX(), y - getY());
         return Utils.normalRelativeAngle(angle - getHeading());
     }
 
-    public double getDistancia(double x1, double y1, double x2, double y2) {
+    private double getDistancia(double x1, double y1, double x2, double y2) {
         // distancia entre dos punts arrel quadrada quadrats
         return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
     }
 
-    public double apuntarEnemic(ScannedRobotEvent e) {
+    private double apuntarEnemic(ScannedRobotEvent e) {
         double angleGun = e.getBearing() + getHeading();
         return angleGun - getRadarHeading();
     }
 
-    public void anarCentre() {
+    private void anarCentre() {
         setTurnRight(getDireccio(getBattleFieldWidth() / 2, getBattleFieldHeight() / 2));
         setAhead(Math.abs(getDistancia(getX(), getY(), getBattleFieldWidth() / 2, getBattleFieldHeight() / 2)));
     }
 
-    public boolean wallsAprop() {
+    private boolean wallsAprop() {
         if (getX() <= marges
                 || getY() <= marges
                 || getX() >= getBattleFieldWidth() - marges
@@ -99,41 +90,49 @@ public class PropiAvancat extends AdvancedRobot {
     public void onScannedRobot(ScannedRobotEvent e) {
         direccioRadar = -direccioRadar;
         double angleAbsolut = getHeading() + e.getBearing();
-        //afegirTrajectoria((int) e.getHeading());
-        // canviem la direccio per aproparnos i allunyar-nos
-        /*if (wallsAprop()) {
-         anarCentre();
-         direccio = -direccio;
+        afegirTrajectoria((int) e.getHeading());
+        /*if (mateixaTrajectoria() && trajectoria.size() == TrajectoriaMAXSIZE && !dummyMode) {
+         dummyMode = true;
+         turnRight(0);
          }*/
-        //out.println(mateixaTrajectoria(e));
-        if (direccio == 1) {
-            setTurnRight(e.getBearing() + 85);
-        } else if (direccio == -1) {
-            setTurnRight(e.getBearing() + 95);
+        if (e.getName().toLowerCase().contains("Dummy".toLowerCase())) {
+            dummyMode = true;
+            turnRight(0);
         }
-        setAhead(direccio * 100);
-
-        // canviem la velocitat aleatoriament 
-        /*if (Math.random() > .95) {
-         setMaxVelocity((2 * Math.random()) + 10);
-         }*/
         setTurnRadarRight(Double.POSITIVE_INFINITY * direccioRadar);
-        double angleCano = Utils.normalRelativeAngleDegrees(angleAbsolut - getGunHeading());
-
-        // limit cano https://robocode.sourceforge.io/docs/robocode/robocode/Rules.html#GUN_TURN_RATE
-        // estalviem energia si >25
-        if (Math.abs(angleCano) <= 4 && getEnergy() > 25) {
-            if (e.getBearing() > 0) {
-                setTurnGunRight(angleCano + 0.5);
-            } else {
-                setTurnGunRight(angleCano - 0.5);
-
+        if (!dummyMode) {
+            if (direccio == 1) {
+                setTurnRight(e.getBearing() + 85);
+            } else if (direccio == -1) {
+                setTurnRight(e.getBearing() + 95);
             }
-            dispara(e);
+            setAhead(direccio * 100);
+            double angleCano = Utils.normalRelativeAngleDegrees(angleAbsolut - getGunHeading());
+            // limit cano https://robocode.sourceforge.io/docs/robocode/robocode/Rules.html#GUN_TURN_RATE
+            // estalviem energia si >25
+            if (Math.abs(angleCano) <= 4 && getEnergy() > 25) {
+                if (e.getBearing() > 0) {
+                    setTurnGunRight(angleCano + 0.5);
+                } else {
+                    setTurnGunRight(angleCano - 0.5);
+
+                }
+                dispara(e);
+            } else {
+                setTurnGunRight(angleCano);
+            }
+            //setTurnGunRight(apuntarEnemic(e)+90);
         } else {
-            setTurnGunRight(angleCano);
+            double angleCano = Utils.normalRelativeAngleDegrees(angleAbsolut - getGunHeading());
+            if (e.getHeading() > 0) {
+                setTurnGunRight(angleCano + 9);
+            } else {
+                setTurnGunRight(angleCano - 9);
+            }
+            if (getGunHeat() == 0) {
+                fire(300 / e.getDistance());
+            }
         }
-        //setTurnGunRight(apuntarEnemic(e)+90);
     }
 
     public void dispara(ScannedRobotEvent e) {
@@ -145,7 +144,7 @@ public class PropiAvancat extends AdvancedRobot {
                 setFire(300 / e.getDistance());
             }
         } else {
-            if (e.getDistance() < 250) {
+            if (e.getDistance() < 300) {
                 setFire(2);
             }
         }
